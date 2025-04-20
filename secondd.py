@@ -38,12 +38,13 @@ def add_subtitles_to_videos(video_folder, subtitle_folder, output_folder, font_n
 
                 print(f"Processing video: {video_file}")
 
-                if not hasattr(video, 'subclipped'):
+                if not hasattr(video, 'subclipped'): 
                     print(f"❌ Error: 'subclipped' method not found in VideoFileClip")
                     video.close()
                     continue
 
                 # Sample subtitles - In reality, you should parse the .srt file
+                
                 subs = [((0, 4), "Subtitle 1"),
                         ((4, 9), "Subtitle 2"),
                         ((9, 12), "Subtitle 3"),
@@ -53,16 +54,20 @@ def add_subtitles_to_videos(video_folder, subtitle_folder, output_folder, font_n
                 for (from_t, to_t), txt in subs:
                     try:
                         print("===============5=================")
-                        
+                        print(from_t, to_t, txt)
                         sub_clip = video.subclipped(from_t, to_t)
                         annotated_clips.append(annotate(sub_clip, txt, font_name=font_name)) #, font_name=font_name
                         sub_clip.close()
                     except Exception as e:
                         print(f"❌ Error processing subtitle ({from_t}-{to_t}): {e}")
 
-                final_clip = concatenate_videoclips(annotated_clips)
+                print("===============HERE===================")
+                print("================ANNOTED====================", annotated_clips)
+                final_clip = concatenate_videoclips(annotated_clips, "compose", bg_color=None, padding=0)
+                print("=================FINAL===================", final_clip)
                 output_path = os.path.join(output_folder, f"{video_name}_with_subs.mp4")
-                final_clip.write_videofile(output_path, codec="libx264", audio_codec="aac")
+                print("=================OUTPUT===================", output_path)
+                final_clip.write_videofile("clip_1_with_subs.mp4") #output_path, codec="libx264", audio_codec="aac"
                 print("===============9=================")
 
                 print(f"✅ Subtitles added to {video_file} and saved as {os.path.basename(output_path)}")
