@@ -2,11 +2,14 @@ import subprocess
 import os
 
 def add_subtitles(video_path, subtitles_path, output_path):
-    """Adds subtitles using raw FFmpeg command with explicit stream mapping."""
+    """Adds subtitles using FFmpeg with proper path escaping."""
     # Convert to absolute paths and normalize
     video_path = os.path.abspath(video_path)
     subtitles_path = os.path.abspath(subtitles_path)
     output_path = os.path.abspath(output_path)
+
+    # Escape backslashes in paths
+    subtitles_path = subtitles_path.replace("\\", "\\\\")
 
     print("==================================================")
     print(f"Video path: {video_path}")
@@ -17,18 +20,16 @@ def add_subtitles(video_path, subtitles_path, output_path):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     cmd = [
-        "ffmpeg",
-        "-i", video_path,
-        "-i", subtitles_path,
-        "-map", "0:v:0",  # Select the first video stream from the first input
-        "-map", "0:a:0",  # Select the first audio stream from the first input
-        "-map", "1:s:0",  # Select the first subtitle stream from the second input
-        "-c:v", "copy",
-        "-c:a", "copy",
-        "-c:s", "mov_text",  # Encode subtitles to mov_text for MP4
-        "-metadata:s:s:0", "language=eng", # Optional: set subtitle language
-        output_path
-    ]
+    "ffmpeg",
+    "-i", video_path,
+    "-vf", f"subtitles={subtitles_path.replace(':', '\\:').replace('\\', '\\\\')}",
+    "-c:v", "libx264",
+    "-c:a", "copy",
+    "-preset", "fast",
+    "-crf", "22",
+    output_path
+]
+
 
     # Debug: Print the exact command being executed
     print("Executing:", " ".join(cmd))
