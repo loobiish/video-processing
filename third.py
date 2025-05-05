@@ -33,7 +33,6 @@ def add_subtitles(video_path, subtitles_path, output_path):
 
     # Debug: Print the exact command being executed
     print("Executing:", " ".join(cmd))
-
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
         print(f"✅ Success! Output saved to: {output_path}")
