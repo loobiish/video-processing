@@ -10,6 +10,8 @@ def add_subtitles(video_path, subtitles_path, output_path):
 
     # Escape backslashes in paths
     subtitles_path = subtitles_path.replace("\\", "\\\\")
+    # Remove all files in final_videos
+    [os.remove(os.path.join(base_dir, "final_videos", f)) for f in os.listdir(os.path.join(base_dir, "final_videos")) if os.path.isfile(os.path.join(base_dir, "final_videos", f))]
 
     print("==================================================")
     print(f"Video path: {video_path}")
