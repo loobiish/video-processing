@@ -2,9 +2,11 @@ import os
 from moviepy import VideoFileClip
 from moviepy.video.fx import Crop
 import whisper
+import subprocess
 
 def extract_clip_moviepy(video_path, start_time, end_time, output_path):
     """Extracts video clips using MoviePy's precise subclip method."""
+    
     try:
         clip = VideoFileClip(video_path)
         if clip.duration == 0:
@@ -72,7 +74,7 @@ def extract_and_resize_clips(video_path, timestamps, output_folder):
         print(f"📁 Created output directory: {output_folder}")
 
     clip_paths = []
-
+    
     for idx, (start, end) in enumerate(timestamps):
         print(f"🎬 Processing clip {idx + 1}: {start} to {end}")
 
@@ -88,6 +90,7 @@ def extract_and_resize_clips(video_path, timestamps, output_folder):
         try:
             print(f"🔪 Extracting subclip: {start_sec}s to {end_sec}s")
             extract_clip_moviepy(video_path, start_sec, end_sec, temp_output_path)
+            
             temp_file_size = os.path.getsize(temp_output_path)
             print(f"Temporary file size: {temp_file_size}")
 
@@ -121,7 +124,7 @@ def extract_and_resize_clips(video_path, timestamps, output_folder):
             clip = clip.resized(height=1920)
             cropper = Crop(width=1080, height=1920, x_center=clip.w / 2, y_center=clip.h / 2)
             clip = cropper.apply(clip)
-
+            
             final_output_path = os.path.join(output_folder, f"clip_{idx + 1}.mp4")
             clip.write_videofile(final_output_path, codec="libx264", fps=fps, audio_codec="aac")
             print(f"✅ Saved clip {idx + 1} at {final_output_path}")
@@ -159,8 +162,7 @@ def time_to_seconds_to_timestamp(seconds):
 
 def generate_subtitles(clip_paths, output_folder):
     """Extracts audio from clips and generates subtitles."""
-    model = whisper.load_model("base")  # You can change model size
-
+    model = whisper.load_model("small", device="cpu")  # For better Hindi accuracy
     for clip_path in clip_paths:
         try:
             audio_path = os.path.join(output_folder, f"{os.path.splitext(os.path.basename(clip_path))[0]}.mp3") # changed to .mp3
@@ -168,7 +170,7 @@ def generate_subtitles(clip_paths, output_folder):
             video_clip.audio.write_audiofile(audio_path, codec="mp3") # changed to mp3
             video_clip.close()
 
-            result = model.transcribe(audio_path)
+            result = model.transcribe(audio_path, language="hi")
             segments = result["segments"]
 
             srt_path = os.path.join(output_folder, f"{os.path.splitext(os.path.basename(clip_path))[0]}.srt")
@@ -190,10 +192,48 @@ def generate_subtitles(clip_paths, output_folder):
             print(f"❌ Error generating subtitles for {clip_path}: {e}")
             print(f"Debug Info: {e}") # Debugging tool
 
+
+def add_subtitles(video_path, subtitles_path, output_path):
+    """Adds subtitles using FFmpeg with proper path escaping."""
+    # Convert to absolute paths and normalize
+    
+    video_path = os.path.abspath(video_path)
+    subtitles_path = os.path.abspath(subtitles_path)
+    output_path = os.path.abspath(output_path)
+
+    # Escape backslashes in paths
+    subtitles_path = subtitles_path.replace("\\", "\\\\")
+    # Remove all files in final_videos
+    [os.remove(os.path.join(base_dir, "final_videos", f)) for f in os.listdir(os.path.join(base_dir, "final_videos")) if os.path.isfile(os.path.join(base_dir, "final_videos", f))]
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    cmd = [
+    "ffmpeg",
+    "-i", video_path,
+    "-vf", f"subtitles={subtitles_path.replace(':', '\\:').replace('\\', '\\\\')}",
+    "-c:v", "libx264",
+    "-c:a", "copy",
+    "-preset", "fast",
+    "-crf", "22",
+    output_path
+]
+
+
+    # Debug: Print the exact command being executed
+    print("Executing:", " ".join(cmd))
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        print(f"✅ Success! Output saved to: {output_path}")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ FFmpeg failed with error:\n{e.stderr}")
+
+
+
 if __name__ == "__main__":
-    video_path = "video-processing/input_files/sample_video.mp4"  # Replace with your video path
-    timestamps_file = "video-processing/input_files/timestamps.txt"  # Replace with your timestamps file path
-    output_folder = "video-processing/output_videos"
+    video_path = "input_files/sample_video.mp4"  # Replace with your video path
+    timestamps_file = "input_files/timestamps.txt"  # Replace with your timestamps file path
+    output_folder = "output_videos"
 
     if not os.path.exists(video_path):
         print(f"❌ Video file not found: {video_path}")
@@ -224,3 +264,17 @@ if __name__ == "__main__":
         clip_paths = extract_and_resize_clips(video_path, adjusted_timestamps, output_folder)
         generate_subtitles(clip_paths, output_folder)
         print("✅ Video processing complete! Clips and subtitles saved in 'output_videos' folder.")
+                
+        print("✅ Now Burning Subtitles in the video.")
+        
+        VIDEO_FILE = "output_videos/clip_1.mp4"
+        SUBTITLES_FILE = "output_videos/clip_1.srt"
+        OUTPUT_FILE = "final_videos/final_file.mp4"
+        
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        VIDEO_FILE_ABS = os.path.join(base_dir, VIDEO_FILE)
+        SUBTITLES_FILE_ABS = os.path.join(base_dir, SUBTITLES_FILE)
+        OUTPUT_FILE_ABS = os.path.join(base_dir, OUTPUT_FILE)
+
+        add_subtitles(VIDEO_FILE_ABS, SUBTITLES_FILE_ABS, OUTPUT_FILE_ABS)
+        print("✅ Subtitle addition process (using FFmpeg) initiated.")
