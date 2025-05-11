@@ -80,9 +80,9 @@ def add_subtitles_to_videos(video_folder, subtitle_folder, output_folder, font_n
             print(f"⚠ Subtitle file not found for {video_file}: {subtitle_file}")
 
 if __name__ == "__main__":
-    video_folder = "video-processing/output_videos"
-    subtitle_folder = "video-processing/output_videos"
-    output_folder = "video-processing/final_videos"
+    video_folder = "output_videos"
+    subtitle_folder = "output_videos"
+    output_folder = "final_videos"
       # Use the actual installed font name
     print("===============1=================")
     add_subtitles_to_videos(video_folder, subtitle_folder, output_folder, font_name = "video-processing/input_files/font.ttf")
