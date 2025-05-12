@@ -168,7 +168,7 @@ def time_to_seconds_to_timestamp(seconds):
 
 def generate_subtitles(clip_paths, output_folder):
     """Extracts audio from clips and generates subtitles."""
-    model = whisper.load_model("small", device="cpu")  # For better Hindi accuracy
+    model = whisper.load_model("medium", device="gpu")  # For better Hindi accuracy change it to medium
     for clip_path in clip_paths:
         try:
             audio_path = os.path.join(output_folder, f"{os.path.splitext(os.path.basename(clip_path))[0]}.mp3") # changed to .mp3
@@ -213,11 +213,12 @@ def add_subtitles(video_path, subtitles_path, output_path):
     [os.remove(os.path.join(base_dir, "final_videos", f)) for f in os.listdir(os.path.join(base_dir, "final_videos")) if os.path.isfile(os.path.join(base_dir, "final_videos", f))]
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    escaped_path = subtitles_path.replace(':', '\\:').replace('\\', '\\\\')
 
     cmd = [
     "ffmpeg",
     "-i", video_path,
-    "-vf", f"subtitles={subtitles_path.replace(':', '\\:').replace('\\', '\\\\')}",
+    "-vf", f"subtitles={escaped_path}",
     "-c:v", "libx264",
     "-c:a", "copy",
     "-preset", "fast",
