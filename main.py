@@ -1,14 +1,18 @@
+# Improting Libraries
+
 import os
 from moviepy import VideoFileClip
 from moviepy.video.fx import Crop
 import whisper
 import subprocess
 
+
 def extract_clip_moviepy(video_path, start_time, end_time, output_path):
     """Extracts video clips using MoviePy's precise subclip method."""
     
     try:
         clip = VideoFileClip(video_path)
+        # Check if the duration of movie is 0
         if clip.duration == 0:
             raise ValueError("Video duration is 0. Check the file.")
 
@@ -120,7 +124,9 @@ def extract_and_resize_clips(video_path, timestamps, output_folder):
                 clip.close()
                 os.remove(temp_output_path)
                 continue
-
+            
+            
+            # Resize the video dimensions in 1080 x 1920
             clip = clip.resized(height=1920)
             cropper = Crop(width=1080, height=1920, x_center=clip.w / 2, y_center=clip.h / 2)
             clip = cropper.apply(clip)
@@ -233,7 +239,7 @@ def add_subtitles(video_path, subtitles_path, output_path):
 if __name__ == "__main__":
     video_path = "input_files/sample_video.mp4"  # Replace with your video path
     timestamps_file = "input_files/timestamps.txt"  # Replace with your timestamps file path
-    output_folder = "output_videos"
+    output_folder = "output_videos"  # Replace with the path where you want to save initial video
 
     if not os.path.exists(video_path):
         print(f"❌ Video file not found: {video_path}")
@@ -264,9 +270,13 @@ if __name__ == "__main__":
         clip_paths = extract_and_resize_clips(video_path, adjusted_timestamps, output_folder)
         generate_subtitles(clip_paths, output_folder)
         print("✅ Video processing complete! Clips and subtitles saved in 'output_videos' folder.")
-                
+        
+        
+        # Burning subtitles in the video
         print("✅ Now Burning Subtitles in the video.")
         
+        # Make an iteration over the files present in folder
+        # Still have to add
         VIDEO_FILE = "output_videos/clip_1.mp4"
         SUBTITLES_FILE = "output_videos/clip_1.srt"
         OUTPUT_FILE = "final_videos/final_file.mp4"
