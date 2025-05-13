@@ -207,6 +207,12 @@ def add_subtitles(video_path, subtitles_path, output_path):
     subtitles_path = os.path.abspath(subtitles_path)
     output_path = os.path.abspath(output_path)
 
+
+    # Subtitle path
+    font_path = "input_files/font.ttf"
+    font_path = os.path.abspath(font_path).replace("\\", "\\\\")
+    subtitles_path_escaped = os.path.abspath(subtitles_path).replace("\\", "\\\\")
+    
     # Escape backslashes in paths
     subtitles_path = subtitles_path.replace("\\", "\\\\")
     # Remove all files in final_videos
@@ -218,7 +224,7 @@ def add_subtitles(video_path, subtitles_path, output_path):
     cmd = [
     "ffmpeg",
     "-i", video_path,
-    "-vf", f"subtitles={escaped_path}",
+    "-vf", f"subtitles={escaped_path}:force_style='FontFile={font_path}'",
     "-c:v", "libx264",
     "-c:a", "copy",
     "-preset", "fast",
