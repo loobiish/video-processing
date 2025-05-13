@@ -242,6 +242,16 @@ if __name__ == "__main__":
     timestamps_file = "input_files/timestamps.txt"  # Replace with your timestamps file path
     output_folder = "output_videos"  # Replace with the path where you want to save initial video
 
+    folder_name = "final_videos"
+
+# Method 1: Using os.mkdir() - creates only one directory
+    try:
+        os.mkdir(folder_name)
+        print(f"Folder '{folder_name}' created successfully using os.mkdir()")
+    except FileExistsError:
+        print(f"Folder '{folder_name}' already exists.")
+
+
     if not os.path.exists(video_path):
         print(f"❌ Video file not found: {video_path}")
     elif not os.path.exists(timestamps_file):
