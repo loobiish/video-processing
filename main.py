@@ -168,7 +168,7 @@ def time_to_seconds_to_timestamp(seconds):
 
 def generate_subtitles(clip_paths, output_folder):
     """Extracts audio from clips and generates subtitles."""
-    model = whisper.load_model("medium", device="gpu")  # For better Hindi accuracy change it to medium
+    model = whisper.load_model("small", device="cpu")  # For better Hindi accuracy change it to medium
     for clip_path in clip_paths:
         try:
             audio_path = os.path.join(output_folder, f"{os.path.splitext(os.path.basename(clip_path))[0]}.mp3") # changed to .mp3
